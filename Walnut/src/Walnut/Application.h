@@ -6,6 +6,7 @@
 #include <vector>
 #include <memory>
 #include <functional>
+#include <algorithm>
 
 #include "imgui.h"
 #include "vulkan/vulkan.h"
@@ -33,13 +34,29 @@ namespace Walnut {
 		void SetMenubarCallback(const std::function<void()>& menubarCallback) { m_MenubarCallback = menubarCallback; }
 		
 		template<typename T>
-		void PushLayer()
+		bool ContainsLayer(const std::shared_ptr<T>& layer) const
 		{
-			static_assert(std::is_base_of<Layer, T>::value, "Pushed type is not subclass of Layer!");
-			m_LayerStack.emplace_back(std::make_shared<T>())->OnAttach();
+			static_assert(std::is_base_of<Layer, T>::value, "Layer type is not subclass of Layer!");
+			return std::find(m_LayerStack.begin(), m_LayerStack.end(), layer) != m_LayerStack.end();
 		}
 
-		void PushLayer(const std::shared_ptr<Layer>& layer) { m_LayerStack.emplace_back(layer); layer->OnAttach(); }
+		template<typename T>
+		void PushLayer(const std::shared_ptr<T>& layer)
+		{
+			static_assert(std::is_base_of<Layer, T>::value, "Pushed type is not subclass of Layer!");
+			m_LayerStack.emplace_back(layer)->OnAttach();
+		}
+
+		template<typename T>
+		void PopLayer(const std::shared_ptr<T>& layer)
+		{
+			static_assert(std::is_base_of<Layer, T>::value, "Popped type is not subclass of Layer!");
+			auto it = std::find(m_LayerStack.begin(), m_LayerStack.end(), layer);
+			if (it != m_LayerStack.end())
+			{
+				m_LayerStack.erase(it);
+			}
+		}
 
 		void Close();
 
