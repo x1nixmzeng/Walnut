@@ -22,11 +22,29 @@ Walnut::Application* Walnut::CreateApplication(int argc, char** argv)
 	spec.Name = "Walnut Example";
 
 	Walnut::Application* app = new Walnut::Application(spec);
-	app->PushLayer<ExampleLayer>();
-	app->SetMenubarCallback([app]()
+
+	auto example = std::make_shared<ExampleLayer>();
+	app->PushLayer(example);
+
+	app->SetMenubarCallback([app, example]()
 	{
 		if (ImGui::BeginMenu("File"))
 		{
+			if (app->ContainsLayer(example))
+			{
+				if (ImGui::MenuItem("Remove Example Layer"))
+				{
+					app->PopLayer(example);
+				}
+			}
+			else
+			{
+				if (ImGui::MenuItem("Add Example Layer"))
+				{
+					app->PushLayer(example);
+				}
+			}
+
 			if (ImGui::MenuItem("Exit"))
 			{
 				app->Close();
